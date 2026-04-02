@@ -4,9 +4,9 @@
 // Get a free hosted Postgres database in seconds: `npx create-db`
 
 generator client {
-  provider = "prisma-client"
-  output   = "../generated/prisma"
-  moduleFormat    = "cjs"
+  provider     = "prisma-client"
+  output       = "../generated/prisma"
+  moduleFormat = "cjs"
 }
 
 datasource db {
@@ -20,14 +20,26 @@ enum orderStatus {
 }
 
 model Order {
-   id String @id @default(uuid())
-   totalAmount Float
-   totalItems Int
+  id          String @id @default(uuid())
+  totalAmount Float
+  totalItems  Int
 
-   status orderStatus
-   paid Boolean @default(false)
-   paidAt DateTime?
+  status orderStatus @default(PENDING)
+  paid   Boolean     @default(false)
+  paidAt DateTime?
 
-   createdAt DateTime @default(now())
-   updatedAt DateTime @updatedAt
+  createdAt DateTime @default(now())
+  updatedAt DateTime @updatedAt
+
+  OrderItem OrderItem[]
+}
+
+model OrderItem {
+  id        String @id @default(uuid())
+  productId Int
+  quantity  Int
+  price     Float
+
+  order   Order?  @relation(fields: [orderId], references: [id])
+  orderId String?
 }
