@@ -7,7 +7,7 @@ import {
 } from '@nestjs/common';
 import { PrismaClient } from 'generated/prisma/client';
 import { PrismaPg } from '@prisma/adapter-pg';
-import { envs, PRODUCT_SERVICE } from 'src/config';
+import { envs, NATS_SERVICE } from 'src/config';
 import { ClientProxy, RpcException } from '@nestjs/microservices';
 import {
   ChangeOrderStatusDto,
@@ -22,7 +22,7 @@ export class OrdersService extends PrismaClient implements OnModuleInit {
   private prisma: PrismaClient;
 
   constructor(
-    @Inject(PRODUCT_SERVICE) private readonly productsClient: ClientProxy,
+    @Inject(NATS_SERVICE) private readonly client: ClientProxy,
   ) {
     const adapter = new PrismaPg({
       connectionString: envs.databaseUrl,
@@ -43,7 +43,7 @@ export class OrdersService extends PrismaClient implements OnModuleInit {
       const productIds = createOrderDto.items.map((items) => items.productId);
 
       const products: any[] = await firstValueFrom(
-        this.productsClient.send({ cmd: 'validate_products' }, productIds),
+        this.client.send({ cmd: 'validate_products' }, productIds),
       );
 
       const totalAmount = createOrderDto.items.reduce((acc, orderItem) => {
@@ -95,7 +95,7 @@ export class OrdersService extends PrismaClient implements OnModuleInit {
     } catch (error) {
       throw new RpcException({
         status: HttpStatus.BAD_REQUEST,
-        message: 'Check logs of products microservice',
+        message: 'There is a problem with products-ms',
       });
     }
   }
@@ -150,7 +150,7 @@ export class OrdersService extends PrismaClient implements OnModuleInit {
 
     const productIds  = order.OrderItem.map( orderItem => orderItem.productId );
      const products: any[] = await firstValueFrom(
-        this.productsClient.send({ cmd: 'validate_products' }, productIds),
+        this.client.send({ cmd: 'validate_products' }, productIds),
       );
 
       return {
